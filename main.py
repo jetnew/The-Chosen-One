@@ -41,7 +41,24 @@ class Env:
         self.level1Door = [800, 000, 100, 900]
         self.level = 1
         self.upperLevel = 0
-        
+    
+    # CONTROL MOVEMENTS
+    def execute(self):
+        action = None
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    action = 2
+                if event.key == pygame.K_LEFT and self.touchingObst == 0:
+                    action = 0
+                if event.key == pygame.K_RIGHT and self.touchingObst == 0:
+                    action = 1
+                if event.type == pygame.QUIT:
+                    pygame.display.quit()
+                    quit()
+                    action = -1
+        return action
     def jump(self):
         if self.jumps < self.maxJumps:
             self.gravityCurrent = -10
@@ -52,6 +69,15 @@ class Env:
     def right(self):
         if self.touchingObst == 0:
             self.xCurrent = 10
+            
+    def test_agent(self):
+        run = True
+        while run:
+            sleep(0.001)
+            action = self.execute()
+            if action == -1:
+                break
+            self.step(action)
 
     def step(self, action):
         if action == 0:
@@ -96,7 +122,6 @@ class Env:
         textsurface = myFont.render('The Chosen One', False, black)
         gameDisplay.blit(textsurface, (200,200))
         pygame.display.update()
-        sleep(0.01)
         
     def getGameState(self):
         values = [

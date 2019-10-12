@@ -12,7 +12,8 @@ blue = (0, 0, 255)
 purple = (255, 0, 255)
 
 class Env:
-    def __init__(self, game_dims=(1000, 800)):
+    def __init__(self, 
+                 game_dims=(1000, 800)):
         
         pygame.init()
         self.play = True
@@ -53,6 +54,10 @@ class Env:
                     action = 0
                 if event.key == pygame.K_RIGHT and self.touchingObst == 0:
                     action = 1
+                if event.type == pygame.QUIT:
+                    pygame.display.quit()
+                    quit()
+                    action = -1
         return action
     def jump(self):
         if self.jumps < self.maxJumps:
@@ -65,15 +70,14 @@ class Env:
         if self.touchingObst == 0:
             self.xCurrent = 10
             
-    def test_game(self):
+    def test_agent(self):
         run = True
         while run:
-            action = self.execute()
-            self.step(action)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
             sleep(0.001)
+            action = self.execute()
+            if action == -1:
+                break
+            self.step(action)
 
     def step(self, action):
         if action == 0:
@@ -118,7 +122,6 @@ class Env:
         textsurface = myFont.render('The Chosen One', False, black)
         gameDisplay.blit(textsurface, (200,200))
         pygame.display.update()
-        sleep(0.01)
         
     def getGameState(self):
         values = [
