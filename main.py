@@ -70,7 +70,6 @@ class Agent:
         self.jumps = 0
         self.maxJumps = 2
         self.xpos, self.ypos = xy
-        self.touchingObst = 0
         self.gravityPull = 0.5
         self.gravityCurrent = 0
         self.xCurrent = 0
@@ -79,11 +78,9 @@ class Agent:
             self.gravityCurrent = -10
             self.jumps = self.jumps + 1
     def left(self):
-        if self.touchingObst == 0:
-            self.xCurrent = -10
+        self.xCurrent = -10
     def right(self):
-        if self.touchingObst == 0:
-            self.xCurrent = 10
+        self.xCurrent = 10
     def update(self):
         # CONTROL GRAVITY
         self.gravityCurrent = self.gravityCurrent + self.gravityPull
@@ -118,7 +115,6 @@ class Agent:
             self.right()
         elif agent_action == 2:
             self.jump()
-            
 
 class Env:
     def __init__(self, game_dims=(1000, 800)):
@@ -135,36 +131,34 @@ class Env:
         self.entity_list = []
     
     # CONTROL MOVEMENTS
+    Mouse_x = -200
+    Mouse_y = -200
+    MMouse_x = -200
+    MMouse_y = -200
     def execute(self):
-        agent_action = None
-        weapon_action = (0,0,0)
-        
+        action = None
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    agent_action = 2
-                if event.key == pygame.K_LEFT and self.agent.touchingObst == 0:
-                    agent_action = 0
-                if event.key == pygame.K_RIGHT and self.agent.touchingObst == 0:
-                    agent_action = 1
+                    action = 2
+                if event.key == pygame.K_LEFT:
+                    action = 0
+                if event.key == pygame.K_RIGHT:
+                    action = 1
+                if event.key == pygame.K_ESCAPE:
+                    action = -1
             if event.type == pygame.QUIT:
-                pygame.display.quit()
-                agent_action = -1
-                
-        action = (agent_action, weapon_action)
+                    pygame.display.quit()
+                    quit()
+                    action = -1
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.Mouse_x, self.Mouse_y = pygame.mouse.get_pos()
+            if event.type == pygame.MOUSEMOTION:
+                    self.MMouse_x, self.MMouse_y = pygame.mouse.get_pos()
+
         return action
-            
-    def test_agent(self):
-        """FOR TESTING OF AGENT ACTIONS ONLY"""
-        run = True
-        while run:
-            sleep(0.01)
-            action = self.execute()
-            if action == -1:
-                break
-            self.step(action)
-            
+
     def create_entity(self, weapon_action):
         wep_type, wep_xy, angle = weapon_action
         if self.delay != 0:
@@ -208,12 +202,13 @@ class Env:
         # MOVE THE AGENT
         self.agent.act(agent_action)
         self.agent.display(self.gameDisplay)
+        self.create_gun(self.gameDisplay, self.Mouse_x, self.Mouse_y, self.agent.xpos) #create gun on click
         
         # CREATE WEAPON ENTITY
         self.create_entity(weapon_action)
         
         # UPDATE ENTITIES
-        self.update_entities()            
+        self.update_entities()
         
         # DISPLAY BACKGROUND
         self.display_background()
@@ -224,8 +219,47 @@ class Env:
             self.xCurrent,
             self.jumps,
             self.ypos,
-            self.xpos,
-            self.touchingObst,
+            self.xpos
+        ]
+        return values
+        
+    def create_gun(self, gameDisplay, x , y, nX):
+        def rot_center(image, angle):
+            """rotate an image while keeping its center and size"""
+            orig_rect = image.get_rect()
+            rot_image = pygame.transform.rotate(image, angle)
+            rot_rect = orig_rect.copy()
+            rot_rect.center = rot_image.get_rect().center
+            rot_image = rot_image.subsurface(rot_rect).copy()
+            return rot_image
+
+        gun = pygame.image.load('assets/assaultrifle2.png')
+        gunRect = gun.get_size()
+        gunScaled = pygame.transform.scale(gun, (180 , 180))
+        imagePosX = x - (gunRect[0]/2) + 0
+        if(nX > imagePosX):
+            imagePosX += 181
+        imagePosY = y - (gunRect[1]/2) + 90
+        scaleBy = 1
+        dx = imagePosX - self.MMouse_x + 90
+        dy = imagePosY - self.MMouse_y + 90
+        rads = math.atan2(-dy,dx)
+        degs = math.degrees(rads)
+        print(degs+90)
+        print(self.Mouse_x)
+        #gunScaled = pygame.transform.rotozoom(gunScaled, degs , scaleBy)
+        rot_img = rot_center(gunScaled, degs)
+        print(rot_img)
+        gameDisplay.blit(rot_img, (imagePosX, imagePosY)) #create image and center on mouse click
+        pygame.display.update()
+
+    def getGameState(self):
+        values = [
+            self.gravityCurrent,
+            self.xCurrent,
+            self.jumps,
+            self.ypos,
+            self.xpos
         ]
         return values
     
@@ -233,20 +267,23 @@ class Env:
         """Resets the game. Returns (reward, state, done)."""
         self.__init__()
         return (1, self.getGameState(), False)
-
+    
     def test_step(self):
-        # Create Gun at random place and angles
-        agent_action = random.randint(0,2)
+        run = True
+        while run:
+            sleep(0.001)
 
-        wep_type = agent_action
-        wep_xy = (50, 700)
-        angle = 0
-
-        generator_action = (wep_type, wep_xy, angle)
-        action = (agent_action, generator_action)
-        self.step(action)
+            # Create Gun at random place and angles
+            #agent_action = random.randint(0,2)
+            agent_action = self.execute()
+            if agent_action == -1:
+                break
+            wep_type = random.randint(0,2)
+            wep_xy = (50, 700)
+            angle = 0
+            generator_action = (wep_type, wep_xy, angle)
+            action = (agent_action, generator_action)
+            self.step(action)
 
 env = Env()
-
-for i in range(1000):
-    env.test_step()
+env.test_step()
