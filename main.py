@@ -78,6 +78,11 @@ class Env:
             if action == -1:
                 break
             self.step(action)
+            keyinput = pygame.key.get_pressed()
+            # exit on corner 'x' click or escape key press
+            if keyinput[pygame.K_ESCAPE]:
+                raise SystemExit
+
 
     def step(self, action):
         if action == 0:
@@ -138,3 +143,6 @@ class Env:
         """Resets the game. Returns (reward, state, done)."""
         self.__init__()
         return (1, self.getGameState(), False)
+
+env = Env()
+env.test_agent()
