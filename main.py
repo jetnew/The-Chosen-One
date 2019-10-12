@@ -41,6 +41,15 @@ class Env:
         self.level1Door = [800, 000, 100, 900]
         self.level = 1
         self.upperLevel = 0
+
+        #GRENADE
+        self.grenadeX = 100
+        self.grenadeY = 400
+        self.grenadeSize = 10
+        self.grenadeTimer = 12
+        self.grenadeVelocityX = 10
+        self.grenadeVelocityY = 5
+        self.grenadeActive = False
     
     # CONTROL MOVEMENTS
     def execute(self):
@@ -116,10 +125,29 @@ class Env:
                 self.gravityCurrent = 0
                 self.jumps = 0
 
+        #GRENADE
+        if self.grenadeActive:
+            if self.grenadeTimer >= 2:
+                self.grenadeX += self.grenadeVelocityX
+                self.grenadeY -= (self.grenadeVelocityY * abs(self.grenadeVelocityY)) * 1
+                self.grenadeVelocityY -= 1
+                self.grenadeTimer -= 1
+            elif self.grenadeTimer >= 0:
+                self.grenadeX -= 4
+                self.grenadeY -= 4
+                self.grenadeSize += 8
+                self.grenadeTimer -= 1
+            else:
+                self.grenadeX += 8
+                self.grenadeY += 8
+                self.grenadeSize = 10
+                self.grenadeTimer = 12
+                self.grenadeActive = False
 
         gameDisplay = pygame.display.set_mode(self.game_dims, 0, 32)
         gameDisplay.fill(white)
         pygame.draw.rect(gameDisplay, red, (self.xpos, self.ypos, 50, 50))
+        pygame.draw.rect(gameDisplay, black, (self.grenadeX, self.grenadeY, self.grenadeSize, self.grenadeSize))
         pygame.font.init()
 
         # pygame.draw.rect(gameDisplay, green, level1Door)
@@ -127,6 +155,13 @@ class Env:
         textsurface = myFont.render('The Chosen One', False, black)
         gameDisplay.blit(textsurface, (200,200))
         pygame.display.update()
+
+    def grenade(self, velocityX, velocityY):
+        self.grenadeX = self.xpos
+        self.grenadeY = self.ypos
+        self.grenadeVelocityX = velocityX
+        self.grenadeVelocityY = velocityY
+        self.grenadeActive = True
         
     def getGameState(self):
         values = [
