@@ -14,25 +14,51 @@ purple = (255, 0, 255)
 
 # SIZES
 AGENT_SIZE = 50
-WEAPON_SIZE = 20
+BULLET_WIDTH = 20
+BULLET_HEIGHT = 10
+GRENDADE_SIZE = 10
 
 class Entity:
-    def __init__(self, name, xy, angle, speed):
+    def __init__(self, name, xy, angle, speed, height, width):
         self.name = name
         self.x, self.y = xy
+        self.height = height
+        self.width = width
         self.speed = speed
-        self.angle = math.radians(angle)  # -1 to 1 
-        self.dx = self.speed * math.cos(self.angle)
-        self.dy = self.speed * math.sin(self.angle)
+
+        if name == 1:
+            self.angle = math.radians(angle)  # -1 to 1 
+            self.dx = self.speed * math.cos(self.angle)
+            self.dy = self.speed * math.sin(self.angle)
+            self.counter = 0
+        elif name == 2:
+            self.angle = angle
+            self.counter = 12
         
     def update(self, agent_xy):
-        self.x += self.dx
-        self.y += self.dy
+        if self.name == 1:
+            self.x += self.dx
+            self.y += self.dy
+        elif self.name == 2:
+            if self.counter >= 2:
+                self.x += self.speed
+                self.y -= (self.angle * abs(self.angle)) * 1
+                self.angle -= 1
+                self.counter -= 1
+            elif self.counter >= 0:
+                self.x -= 4
+                self.y -= 4
+                self.height += 8
+                self.width += 8
+                self.counter -= 1
+            else:
+                self.x = -100
+                self.y = -100
 
         agent_x, agent_y = agent_xy
 
-        has_hit_x = self.x >= agent_x - WEAPON_SIZE and self.x <= agent_x + AGENT_SIZE
-        has_hit_y = self.y >= agent_y - WEAPON_SIZE and self.y <= agent_y + AGENT_SIZE
+        has_hit_x = self.x >= agent_x - self.width and self.x <= agent_x + AGENT_SIZE
+        has_hit_y = self.y >= agent_y - self.height and self.y <= agent_y + AGENT_SIZE
 
         return has_hit_x and has_hit_y
     def __repr__(self):
@@ -95,8 +121,7 @@ class Agent:
             
 
 class Env:
-    def __init__(self, 
-                 game_dims=(1000, 800)):
+    def __init__(self, game_dims=(1000, 800)):
         self.agent = Agent((400,100))
         
         pygame.init()
@@ -145,7 +170,11 @@ class Env:
         if self.delay != 0:
             self.delay -= 1
         if wep_type == 1 and self.delay == 0:
-            ent = Entity(str(wep_type), wep_xy, angle, 10)
+            ent = Entity(wep_type, wep_xy, angle, 10, BULLET_HEIGHT, BULLET_WIDTH)
+            self.entity_list.append(ent)
+            self.delay = 20
+        if wep_type == 2 and self.delay == 0:
+            ent = Entity(wep_type, wep_xy, random.randint(5,12), random.randint(5,50), GRENDADE_SIZE, GRENDADE_SIZE)
             self.entity_list.append(ent)
             self.delay = 20
     def update_entities(self):
@@ -154,7 +183,7 @@ class Env:
         for ent in self.entity_list:
             collide = ent.update((self.agent.xpos, self.agent.ypos))
             if not collide:
-                pygame.draw.rect(self.gameDisplay, blue, (ent.x, ent.y, WEAPON_SIZE, WEAPON_SIZE))
+                pygame.draw.rect(self.gameDisplay, blue, (ent.x, ent.y, ent.width, ent.height))
             else:
                 collided.append(ent)
         for ent in collided:
@@ -209,7 +238,7 @@ class Env:
         # Create Gun at random place and angles
         agent_action = random.randint(0,2)
 
-        wep_type = 1  # gun
+        wep_type = agent_action
         wep_xy = (50, 700)
         angle = 0
 
