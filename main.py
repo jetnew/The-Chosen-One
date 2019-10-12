@@ -147,7 +147,8 @@ class Env:
         gameDisplay = pygame.display.set_mode(self.game_dims, 0, 32)
         gameDisplay.fill(white)
         pygame.draw.rect(gameDisplay, red, (self.xpos, self.ypos, 50, 50))
-        pygame.draw.rect(gameDisplay, black, (self.grenadeX, self.grenadeY, self.grenadeSize, self.grenadeSize))
+        if self.grenadeActive:
+            pygame.draw.rect(gameDisplay, black, (self.grenadeX, self.grenadeY, self.grenadeSize, self.grenadeSize))
         pygame.font.init()
 
         # pygame.draw.rect(gameDisplay, green, level1Door)
