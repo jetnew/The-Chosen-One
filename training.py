@@ -175,7 +175,7 @@ class Env:
 #         print(wep_xy)
         if self.delay != 0:
             self.delay -= 1
-        wep_type = 1
+#         wep_type = 1
         if wep_type == 1 and self.delay == 0:
             ent = Entity(str(wep_type), wep_xy, angle, 10)
             ent_key = self.get_free_key()
@@ -288,13 +288,3 @@ class Env:
         generator_action = (wep_type, wep_xy, angle)
         action = (agent_action, generator_action)
         self.step(action)
-
-env = Env(game_dims=(700, 500), show=False)
-
-# SHOW ENVIRONMENT VALUES
-print('Observation space:', env.observation_space)
-print('Agent action space:', env.agent_action_space)
-print('Generator action space:', env.generator_action_space)
-
-state = env.reset()
-print("State:", state)
